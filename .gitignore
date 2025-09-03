@@ -41,3 +41,6 @@
 *.dwo
 
 .claude/
+
+*.txt
+*.json

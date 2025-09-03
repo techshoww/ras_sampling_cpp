@@ -142,8 +142,56 @@ def run_python_tests():
     with open('python_results.json', 'w') as f:
         json.dump(results, f, indent=2)
     
+    # Also generate a C++ header file with test data for consistency
+    generate_cpp_test_data(test_cases)
+    
     print("Python test results saved to python_results.json")
     return results
+
+def generate_cpp_test_data(test_cases):
+    """Generate a C++ header file with the exact same test data as Python"""
+    with open('test_data.hpp', 'w') as f:
+        f.write("#pragma once\n")
+        f.write("#include <vector>\n")
+        f.write("#include <string>\n\n")
+        f.write("struct TestCase {\n")
+        f.write("    std::string name;\n")
+        f.write("    std::vector<float> weighted_scores;\n")
+        f.write("    std::vector<int> decoded_tokens;\n")
+        f.write("    int speech_token_size;\n")
+        f.write("    float top_p;\n")
+        f.write("    int top_k;\n")
+        f.write("    int win_size;\n")
+        f.write("    float tau_r;\n")
+        f.write("    bool ignore_eos;\n")
+        f.write("};\n\n")
+        f.write("std::vector<TestCase> get_test_cases() {\n")
+        f.write("    return {\n")
+        
+        for i, case in enumerate(test_cases):
+            f.write("        {\n")
+            f.write(f'            "{case["name"]}",\n')
+            f.write("            {")
+            f.write(", ".join([f"{x}f" for x in case["weighted_scores"]]))
+            f.write("},\n")
+            f.write("            {")
+            f.write(", ".join([str(x) for x in case["decoded_tokens"]]))
+            f.write("},\n")
+            f.write(f'            {case["speech_token_size"]},\n')
+            f.write(f'            {case["top_p"]}f,\n')
+            f.write(f'            {case["top_k"]},\n')
+            f.write(f'            {case["win_size"]},\n')
+            f.write(f'            {case["tau_r"]}f,\n')
+            f.write(f'            {str(case["ignore_eos"]).lower()}\n')
+            f.write("        }")
+            if i < len(test_cases) - 1:
+                f.write(",")
+            f.write("\n")
+        
+        f.write("    };\n")
+        f.write("}\n")
+    
+    print("C++ test data header saved to test_data.hpp")
 
 if __name__ == "__main__":
     run_python_tests()

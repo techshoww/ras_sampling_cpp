@@ -13,7 +13,7 @@ fi
 
 # Step 2: Compile and run C++ tests
 echo "Step 2: Compiling and running C++ tests..."
-g++ -std=c++11 -O2 sampling.cpp test_cpp_output.cpp -o test_cpp_output
+g++ -std=c++11 -O2 test_cpp_output.cpp -o test_cpp_output
 
 if [ $? -ne 0 ]; then
     echo "❌ C++ compilation failed"

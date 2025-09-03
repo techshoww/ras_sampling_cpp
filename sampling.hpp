@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vector>
 #include <algorithm>
 #include <numeric>
@@ -8,16 +10,6 @@
 #include <limits>
 #include <functional>
 
-// --- Function Declarations ---
-std::vector<float> softmax_stable(const std::vector<float>& logits);
-std::vector<size_t> sort_indices_desc(const std::vector<float>& v);
-int sample_multinomial(const std::vector<float>& probabilities, std::mt19937& gen);
-int nucleus_sampling(const std::vector<float>& weighted_scores, float top_p = 0.8f, int top_k = 25);
-int random_sampling(const std::vector<float>& weighted_scores);
-int ras_sampling(const std::vector<float>& weighted_scores, const std::vector<int>& decoded_tokens, int speech_token_size, float top_p = 0.8f, int top_k = 25, int win_size = 10, float tau_r = 0.1f);
-int sampling_ids(const std::vector<float>& weighted_scores, const std::vector<int>& decoded_tokens, int speech_token_size, bool ignore_eos = true, int max_trials = 100);
-
-// --- Helper Functions ---
 
 // Numerically stable softmax implementation [[32]]
 std::vector<float> softmax_stable(const std::vector<float>& logits) {
@@ -95,12 +87,12 @@ int nucleus_sampling(const std::vector<float>& weighted_scores, float top_p = 0.
     for (int i = 0; i < actual_top_k; ++i) {
         size_t idx = sorted_indices[i];
         float prob = probs[idx];
-        if (cum_prob < top_p) { // Check Top-p condition first
+        if (cum_prob < top_p && static_cast<int>(filtered_probs.size()) < top_k) {
             cum_prob += prob;
             filtered_probs.push_back(prob);
             filtered_indices.push_back(idx);
         } else {
-            break; // Stop if cumulative probability exceeds top_p
+            break; // Stop if cumulative probability exceeds top_p or reached top_k limit
         }
     }
 
@@ -112,13 +104,21 @@ int nucleus_sampling(const std::vector<float>& weighted_scores, float top_p = 0.
         filtered_indices.push_back(sorted_indices[0]);
     }
 
+    // 4. Re-normalize the filtered probabilities (like PyTorch does)
+    // This is crucial to match Python behavior
+    float sum_filtered = std::accumulate(filtered_probs.begin(), filtered_probs.end(), 0.0f);
+    if (sum_filtered > 0.0f) {
+        for (float& prob : filtered_probs) {
+            prob /= sum_filtered;
+        }
+    }
 
-    // 4. Sample from the filtered distribution
+    // 5. Sample from the filtered distribution
     static std::random_device rd; // Static to seed once
     static std::mt19937 gen(rd());
     int sampled_index_in_filtered = sample_multinomial(filtered_probs, gen);
 
-    // 5. Return the original index
+    // 6. Return the original index
     return static_cast<int>(filtered_indices[sampled_index_in_filtered]);
 }
 

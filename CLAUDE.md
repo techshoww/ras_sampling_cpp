@@ -5,19 +5,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Development Commands
 
 ### Build and Run
-- **Build**: `g++ -std=c++11 sampling.cpp test.cpp -o test`
-- **Run tests**: `./test` (or use the provided script: `bash run.sh`)
+- **Build standalone tests**: `g++ -std=c++11 sampling.hpp test.cpp -o test`
+- **Run standalone tests**: `./test` (or use the provided script: `bash run.sh`)
 - **Quick build and test**: `bash run.sh` - builds and runs tests in one command
 
+### Cross-Language Validation
+- **Full test suite**: `bash run_tests.sh` - runs Python vs C++ comparison tests
+- **Generate test data**: `python generate_test_data.py` - creates test cases and Python baseline results
+- **Build comparison tests**: `g++ -std=c++11 -O2 test_cpp_output.cpp -o test_cpp_output`
+- **Compare results**: `python compare_results.py` - validates C++ implementation against Python baseline
+
 ### Platform Notes
-- Uses C++11 standard
-- Build script uses bash (run.sh)
-- Executable output: `test` (Linux/macOS) or `test.exe` (Windows)
+- Uses C++11 standard with `-O2` optimization for comparison tests
+- Build scripts use bash (run.sh, run_tests.sh)
+- Executable outputs: `test` (standalone), `test_cpp_output` (comparison tests)
 
 ## Code Architecture
 
-### Core Implementation (sampling.cpp)
-This is a C++ implementation of Repetition-Aware Sampling (RAS) for language model token sampling. The implementation parallels a PyTorch version in sampling.py.
+### Core Implementation (sampling.hpp)
+This is a header-only C++ implementation of Repetition-Aware Sampling (RAS) for language model token sampling. The implementation parallels a PyTorch version in sampling.py and provides a C++ port with identical functionality.
 
 **Key Functions:**
 - `softmax_stable()` - Numerically stable softmax implementation
@@ -32,13 +38,13 @@ This is a C++ implementation of Repetition-Aware Sampling (RAS) for language mod
 3. If repetition threshold (tau_r) is exceeded, falls back to random sampling
 4. Handles EOS token filtering when ignore_eos=true
 
-### Test Implementation (test.cpp)
-Comprehensive test suite that validates:
-- Softmax probability distributions
-- Nucleus sampling behavior and distributions
-- Random sampling distributions  
-- RAS repetition detection and fallback logic
-- EOS token handling in sampling_ids()
+### Test Implementations
+**Standalone Tests (test.cpp)**: Comprehensive unit tests that validate individual function behavior including softmax distributions, nucleus sampling, random sampling, RAS repetition detection, and EOS token handling.
+
+**Cross-Language Validation Framework**: 
+- **generate_test_data.py**: Creates randomized test cases and generates Python baseline results using PyTorch implementation
+- **test_cpp_output.cpp**: Runs identical test cases through C++ implementation and outputs results in structured format
+- **compare_results.py**: Statistical comparison of Python vs C++ outputs using statistical tests to validate implementation correctness
 
 ### Key Parameters
 - `top_p`: Nucleus sampling cumulative probability threshold (default: 0.8)
