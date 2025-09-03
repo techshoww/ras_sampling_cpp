@@ -6,7 +6,16 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
-#include <functional> // For std::greater
+#include <functional>
+
+// --- Function Declarations ---
+std::vector<float> softmax_stable(const std::vector<float>& logits);
+std::vector<size_t> sort_indices_desc(const std::vector<float>& v);
+int sample_multinomial(const std::vector<float>& probabilities, std::mt19937& gen);
+int nucleus_sampling(const std::vector<float>& weighted_scores, float top_p = 0.8f, int top_k = 25);
+int random_sampling(const std::vector<float>& weighted_scores);
+int ras_sampling(const std::vector<float>& weighted_scores, const std::vector<int>& decoded_tokens, int speech_token_size, float top_p = 0.8f, int top_k = 25, int win_size = 10, float tau_r = 0.1f);
+int sampling_ids(const std::vector<float>& weighted_scores, const std::vector<int>& decoded_tokens, int speech_token_size, bool ignore_eos = true, int max_trials = 100);
 
 // --- Helper Functions ---
 

@@ -43,7 +43,7 @@ def sampling_ids(
     num_trials, max_trials = 0, 100
     while True:
         top_ids = ras_sampling(weighted_scores, decoded_tokens, sampling)
-        if (not ignore_eos) or .speech_token_size not in top_ids):
+        if (not ignore_eos) or (speech_token_size not in top_ids):
             break
         num_trials += 1
         if num_trials > max_trials:
